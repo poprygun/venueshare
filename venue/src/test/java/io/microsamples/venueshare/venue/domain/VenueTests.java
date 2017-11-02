@@ -1,6 +1,7 @@
 package io.microsamples.venueshare.venue.domain;
 
 
+import org.apache.commons.lang3.ArrayUtils;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -24,11 +25,12 @@ public class VenueTests {
     }
 
     @Test
-    public void should_create_venue_from_events(){
+    public void should_create_venue_from_events() {
 
         UUID toLeave = UUID.randomUUID();
         DomainEvent[] domainEvents = {
                 new VenueActivated(Instant.now())
+                , new VenueNameChanged("Christmass Celebration")
                 , new AttendeeJoined(Attendee.of(toLeave))
                 , new AttendeeJoined(Attendee.of(UUID.randomUUID()))
                 , new AttendeeLeft(Attendee.of(toLeave))};

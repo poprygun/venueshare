@@ -13,11 +13,17 @@ import static javaslang.collection.List.ofAll;
 
 import static javaslang.API.Case;
 
-class Venue {
+public class Venue {
 
-    Venue(UUID uuid) {
+    public Venue(UUID uuid) {
         this.uuid = uuid;
     }
+
+    public UUID id(){
+        return uuid;
+    }
+
+
 
     public static Venue recreateFrom(UUID uuid, List<DomainEvent> domainEvents) {
         return ofAll(domainEvents).foldLeft(new Venue(uuid), Venue::handleEvent);
@@ -28,17 +34,23 @@ class Venue {
                 Case(Predicates.instanceOf(AttendeeEvent.class), this::queueAttendeeEvent)
                , Case(Predicates.instanceOf(VenueActivated.class), this::venueActivated)
                , Case(Predicates.instanceOf(VenueDeactivated.class), this::venueDeactivated)
+               , Case(Predicates.instanceOf(VenueNameChanged.class), this::nameChanged)
         );
     }
 
-    void activate() {
+    public void activate() {
         if (isActive()) throw new IllegalStateException();
 
         venueActivated(new VenueActivated(Instant.now()));
     }
 
-    boolean isActive() {
+    public boolean isActive() {
         return state.equals(VenueState.ACTIVATED);
+    }
+    private Venue nameChanged(VenueNameChanged venueNameChanged) {
+        name = venueNameChanged.getName();
+        changes.add(venueNameChanged);
+        return this;
     }
 
     private Venue venueActivated(VenueActivated venueActivated) {
@@ -48,7 +60,7 @@ class Venue {
     }
 
 
-    void deActivate() {
+    public void deActivate() {
         if (!isActive()) throw new IllegalStateException();
 
         venueDeactivated(new VenueDeactivated(Instant.now()));
@@ -66,7 +78,7 @@ class Venue {
         queueAttendeeEvent(new AttendeeJoined(attendee));
     }
 
-    List<DomainEvent> getChanges() {
+    public List<DomainEvent> getChanges() {
         return Collections.unmodifiableList(changes);
     }
 
@@ -84,6 +96,16 @@ class Venue {
         return this;
     }
 
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+        nameChanged(new VenueNameChanged(name));
+    }
+
+
     enum VenueState {
         ACTIVATED, DEACTIVATED
     }
@@ -91,5 +113,6 @@ class Venue {
     private VenueState state = VenueState.DEACTIVATED;
     private List<DomainEvent> changes = new ArrayList<>();
     private final UUID uuid;
+    private String name;
 
 }
